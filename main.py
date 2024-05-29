@@ -111,7 +111,7 @@ def main():
 """.encode()
 
   if not args.tree:
-    output = dump_files(args.directory, ignore_patterns, args.embed, args.binary)
+    output += dump_files(args.directory, ignore_patterns, args.embed, args.binary)
 
   with open(args.output, 'wb') as f:
     f.write(output)
