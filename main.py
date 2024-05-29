@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 import os
 import argparse
 import fnmatch
@@ -40,14 +39,18 @@ def generate_tree(directory, ignore_patterns, indent=''):
       tree += f"{indent}{corner}── {item}\n"
   return tree
 
-def dump_files(directory, ignore_patterns, embed_tree, binary, dump = bytes()):
+def dump_files(directory, ignore_patterns, embed_tree, binary, done = set()):
   items = os.listdir(directory)
   items = sorted([item for item in items if not should_ignore(os.path.join(directory, item), ignore_patterns)])
+  dump = bytes()
   for item in items:
     item_path = os.path.join(directory, item)
+    if item_path in done:
+      continue
+    done.add(item_path)
     if os.path.isdir(item_path):
-      dump += dump_files(item_path, ignore_patterns, embed_tree, binary, dump)
-    elif not should_ignore(item_path, ignore_patterns):
+      dump += dump_files(item_path, ignore_patterns, embed_tree, binary, done)
+    else:
       with open(item_path, 'rb') as f:
         tmp = f.read(1024)
         if is_binary(tmp) and not binary:
@@ -99,24 +102,21 @@ def main():
 
   output = b''
   if args.tree or args.embed:
+    dirlen = len('{args.directory}')
     output += f"""
-+--------------------------{'-'*vlen} +
++--------------------------{'-'*dirlen}--+
 | Dump tree for directory: {args.directory} |
-+--------------------------{'-'*vlen} +
++--------------------------{'-'*dirlen}--+
 {generate_tree(args.directory, ignore_patterns)}
 """.encode()
-  dumps_futures = []
-  if not args.tree:
-    with ThreadPoolExecutor() as executor:
-      dumps_futures.append(executor.submit(dump_files, args.directory, ignore_patterns, args.embed, args.binary))
 
-  for future in dumps_futures:
-    output += future.result()
+  if not args.tree:
+    output = dump_files(args.directory, ignore_patterns, args.embed, args.binary)
 
   with open(args.output, 'wb') as f:
     f.write(output)
 
-  print(f"Dumped contents to {args.output}. Bye!")
+  print(f"Dumped {len(output)} characters to {args.output}. Bye!")
 
 if __name__ == "__main__":
   main()
