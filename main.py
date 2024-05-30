@@ -72,7 +72,7 @@ def main():
 """)
   parser = argparse.ArgumentParser(description=f"With Repo2txt, dump any repo or directory's contents into a single text file.")
   parser.add_argument('-v', '--version', action='version', version='Repo2txt v1.0')
-  parser.add_argument('-d', '--directory', required=True, help='Directory to dump')
+  parser.add_argument('-d', '--directory', required=False, help='Directory to dump')
   parser.add_argument('-t', '--tree', default=False, help='Generate tree only and not dump file contents to the output file')
   parser.add_argument('-e', '--embed', default=True, help='Embed the tree as dump file head')
   parser.add_argument('-b', '--binary', default=False, help='Dump binary files as well')
@@ -81,42 +81,54 @@ def main():
   parser.add_argument('-o', '--output', required=False, help='Output file to write the dump to')
 
   args = parser.parse_args()
+  if args.directory:
+    if not args.output:
+      args.output = args.directory.split('/')[-1] + ('-dump.txt' if not args.tree else '-tree.txt')
 
-  if not args.output:
-    args.output = args.directory.split('/')[-1] + ('-dump.txt' if not args.tree else '-tree.txt')
+    if not os.path.isdir(args.directory):
+      print(f"Error: {args.directory} is not a valid directory.")
 
-  if not os.path.isdir(args.directory):
-    print(f"Error: {args.directory} is not a valid directory.")
+    options = vars(args)
+    strvals = [str(value) for value in options.values()]
+    klen, vlen = max(len(key) for key in options.keys()), max(len(value) for value in strvals)
+    print(f"""
+    +-{'-'*klen}-+-{'-'*vlen}-+
+    | Option {' '*(klen-6)}| Value {' '*(vlen-5)}|
+    +-{'-'*klen}-+-{'-'*vlen}-+""")
+    for i, key in enumerate(options.keys()):
+      print(f"  | {key}{' '*(klen-len(key))} | {strvals[i]}{' '*(vlen-len(strvals[i]))} |")
+    print(f"  +-{'-'*klen}-+-{'-'*vlen}-+")
+    ignore_patterns = args.ignore.split(',') + (load_gitignore(args.directory) if args.gitignore else [])
 
-  options = vars(args)
-  strvals = [str(value) for value in options.values()]
-  klen, vlen = max(len(key) for key in options.keys()), max(len(value) for value in strvals)
-  print(f"""
-  +-{'-'*klen}-+-{'-'*vlen}-+
-  | Option {' '*(klen-6)}| Value {' '*(vlen-5)}|
-  +-{'-'*klen}-+-{'-'*vlen}-+""")
-  for i, key in enumerate(options.keys()):
-    print(f"  | {key}{' '*(klen-len(key))} | {strvals[i]}{' '*(vlen-len(strvals[i]))} |")
-  print(f"  +-{'-'*klen}-+-{'-'*vlen}-+")
-  ignore_patterns = args.ignore.split(',') + (load_gitignore(args.directory) if args.gitignore else [])
+    output = b''
+    if args.tree or args.embed:
+      dirlen = len('{args.directory}')
+      output += f"""
+  +--------------------------{'-'*dirlen}--+
+  | Dump tree for directory: {args.directory} |
+  +--------------------------{'-'*dirlen}--+
+  {generate_tree(args.directory, ignore_patterns)}
+  """.encode()
 
-  output = b''
-  if args.tree or args.embed:
-    dirlen = len('{args.directory}')
-    output += f"""
-+--------------------------{'-'*dirlen}--+
-| Dump tree for directory: {args.directory} |
-+--------------------------{'-'*dirlen}--+
-{generate_tree(args.directory, ignore_patterns)}
-""".encode()
+    if not args.tree:
+      output += dump_files(args.directory, ignore_patterns, args.embed, args.binary)
 
-  if not args.tree:
-    output += dump_files(args.directory, ignore_patterns, args.embed, args.binary)
+    with open(args.output, 'wb') as f:
+      f.write(output)
+    if not args.tree:
+      output += dump_files(args.directory, ignore_patterns, args.embed, args.binary)
 
-  with open(args.output, 'wb') as f:
-    f.write(output)
+    print(f"Dumped {len(output)} characters to {args.output}. Bye!")
+  else:
+    print(f"""
+Hi! To make it work, you need to run one of the commands below: 
+          
+  -To dump your project:                    py main.py -d /path/to/your/repository/to/dump
+          
+  -To get description of all features:      py main.py -h
+ 
+""")
 
-  print(f"Dumped {len(output)} characters to {args.output}. Bye!")
 
 if __name__ == "__main__":
   main()
