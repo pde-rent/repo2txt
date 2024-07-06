@@ -7,9 +7,10 @@
 
 ```
 
-# Repo2txt: Dump Your Repo/Directory into a Single Text File
+# Repo2txt: Dump a Repo to a Single Text File
 
-Effortlessly consolidate all files within a repository (e.g., GitHub) or any directory structure into a single, easily searchable text file. Ideal for text mining, LLM fine-tuning, embedding generation, and more.
+Effortlessly consolidate all files within a repo (e.g., GitHub) or any directory into a single, structured, easily searchable text file.
+Ideal for text mining, LLM fine-tuning, embedding generation, and more.
 
 ## Key Features
 
@@ -27,21 +28,17 @@ Effortlessly consolidate all files within a repository (e.g., GitHub) or any dir
 * **Repository Backups:** Create compact, searchable backups of your code projects.
 * **Data Versioning:** Track changes in code and content over time with a single file to diff (or not).
 
-## Installation
+## Usage 📖
 
 1. **Clone this Repository:**
    ```bash
-   git clone https://github.com/your_username/repo2txt.git
+   git clone https://github.com/pde-rent/repo2txt.git
    cd repo2txt
    ```
-2. **Done**
-
-## Usage 📖
-Directly execute the `main.py` script from within the cloned repository:
-
-```bash
-python main.py -d /path/to/your/repository/to/dump [-t] [-e] [-b] [-g] [-i "*.lock,*.md"] [-o output.txt]
-```
+2. **Run `main.py` from within the cloned repository:**
+  ```bash
+  python main.py -d /path/to/your/repository/to/dump [-t] [-e] [-b] [-g] [-i "*.lock,*.md"] [-o output.txt]
+  ```
 
 **Options:**
 
@@ -59,13 +56,13 @@ python main.py -d /path/to/your/repository/to/dump [-t] [-e] [-b] [-g] [-i "*.lo
 **Dumping All Files (Including Binaries):**
 
 ```bash
-python main.py -d /path/to/your/github/repository -b -o my_repo_dump.txt
+python main.py -d /path/to/your/repo -e -b -o my_repo_dump.txt
 ```
 
 **Generating Tree Structure Only:**
 
 ```bash
-python main.py -d /path/to/your/github/repository -t -o my_repo_tree.txt
+python main.py -d /path/to/your/repo -t -o my_repo_tree.txt
 ```
 
 **Output Sample (Tree Only):**
