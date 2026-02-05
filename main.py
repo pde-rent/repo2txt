@@ -86,6 +86,7 @@ def main():
   parser.add_argument('-i', '--ignore', required=False, default=".venv,.git,.gitignore,*.lock,.editorconfig,.env.*,LICENCE", help='Custom patterns to ignore, separated by commas')
   parser.add_argument('-o', '--output', required=False, help='Output file to write the dump to')
   parser.add_argument('-s', '--strip-prefix', required=False, default='', help='Strip this prefix from displayed paths (e.g., temp dir path)')
+  parser.add_argument('-n', '--name', required=False, default='', help='Display name for the directory in header (overrides default)')
 
   args = parser.parse_args()
 
@@ -109,7 +110,7 @@ def main():
 
   output = b''
   strip_prefix = args.strip_prefix.rstrip('/') if args.strip_prefix else ''
-  display_dir = '.' if strip_prefix else args.directory
+  display_dir = args.name if args.name else ('.' if strip_prefix else args.directory)
 
   if args.tree or args.embed:
     dirlen = len(display_dir)
