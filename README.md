@@ -9,104 +9,74 @@
 
 # Repo2txt: Dump a Repo to a Single Text File
 
-Effortlessly consolidate all files within a repo (e.g., GitHub) or any directory into a single, structured, easily searchable text file.
+Consolidate all files within a repo or any directory into a single, structured, searchable text file.
 Ideal for text mining, LLM fine-tuning, embedding generation, and more.
 
 ## Key Features
 
-* **No Dependencies:**  Pure Python, single file, no external dependency.
-* **Multithreaded:** Fast enough, leverages multithreads for better IO performance.
-* **Binary File Support:** Optionally include binary files (encoded images, sounds, executables...) alongside text.
+* **No Dependencies:** Pure Python, single file, no external dependency.
+* **Binary File Support:** Optionally include binary files alongside text.
 * **Gitignore Integration:** Exclude files and patterns specified in the target directory `.gitignore`.
-* **Human/LLM Friendly Output:**  Generates a human-readable and structured output, that can be used directly or tokenized to train and fine-tune models.
+* **Symlink Safe:** Detects and skips symlinks to prevent cycles and path traversal.
+* **Human/LLM Friendly Output:** Generates structured output with directory tree and file contents.
 
-## Use Cases
+## Usage
 
-* **LLM Fine-tuning Data Preparation:** Create large text datasets for training language models.
-* **Text Mining & Analysis:** Extract insights from codebases, documentation, and other textual sources.
-* **Embedding Generation:** Generate text representations for tasks like semantic search and similarity comparison, helpful to build RAGs.
-* **Repository Backups:** Create compact, searchable backups of your code projects.
-* **Data Versioning:** Track changes in code and content over time with a single file to diff (or not).
+```bash
+# Clone and run
+git clone https://github.com/pde-rent/repo2txt.git
+cd repo2txt
 
-## Usage 📖
+# Dump a directory (default: tree + file contents)
+python3 main.py -d /path/to/your/repository -o output.txt
 
-1. **Clone this Repository:**
-   ```bash
-   git clone https://github.com/pde-rent/repo2txt.git
-   cd repo2txt
-   ```
-2. **Run `main.py` from within the cloned repository:**
-  ```bash
-  python main.py -d /path/to/your/repository/to/dump [-t] [-e] [-b] [-g] [-i "*.lock,*.md"] [-o output.txt]
-  ```
+# Tree structure only
+python3 main.py -d /path/to/your/repo -t -o my_repo_tree.txt
+
+# Include binary files
+python3 main.py -d /path/to/your/repo -b -o my_repo_dump.txt
+
+# Disable gitignore integration
+python3 main.py -d /path/to/your/repo --no-gitignore -o output.txt
+
+# Disable tree embedding
+python3 main.py -d /path/to/your/repo --no-embed -o output.txt
+
+# Custom ignore patterns
+python3 main.py -d /path/to/your/repo -i "*.lock,*.md,dist" -o output.txt
+```
 
 **Options:**
 
-* `-d, --directory`: **(Required)** The path to the directory you want to dump.
-* `-t, --tree`: Generate the dump tree only (no file contents, false by default).
-* `-e, --embed`: Embed the tree at the beginning of the output file (true by default).
-* `-b, --binary`: Include binary files in the dump (disabled by default).
-* `-g, --gitignore`: Use the `.gitignore` file to exclude files (enabled by default).
-* `-i, --ignore`: Specify additional comma-separated patterns to ignore.
-* `-o, --output`: Specify the output file name (default is based on directory name).
+* `-d, --directory` — **(Required)** The directory to dump.
+* `-t, --tree` — Generate tree only (no file contents).
+* `--embed / --no-embed` — Embed tree at the beginning of output (default: on).
+* `-b, --binary` — Include binary files (default: off).
+* `--gitignore / --no-gitignore` — Use `.gitignore` to exclude files (default: on).
+* `-i, --ignore` — Comma-separated patterns to ignore.
+* `-o, --output` — Output file name (default: `<dirname>-dump.txt`).
+* `-s, --strip-prefix` — Strip this prefix from displayed paths.
+* `-n, --name` — Display name for the directory in header.
+* `-v, --version` — Show version and exit.
 
+## How It Works
 
-## Examples 💡
+Repo2txt walks the target directory recursively, building a visual tree and concatenating file
+contents into a single output file. Binary files are detected by checking the first 1024 bytes
+for non-text characters. Symlinks are flagged and skipped to prevent cycles. The `.gitignore`
+parser supports basic glob patterns (via `fnmatch`) but does not handle negation (`!`), `**`
+recursive wildcards, or nested `.gitignore` files.
 
-**Dumping All Files (Including Binaries):**
+## Disclaimers
 
-```bash
-python main.py -d /path/to/your/repo -e -b -o my_repo_dump.txt
-```
-
-**Generating Tree Structure Only:**
-
-```bash
-python main.py -d /path/to/your/repo -t -o my_repo_tree.txt
-```
-
-**Output Sample (Tree Only):**
-
-```
-+----------------------------------------+
-| Dump tree for directory: ../collector/ |
-+----------------------------------------+
-├── .env.test
-├── README.md
-├── dbs
-│ ├── Dockerfile.dbs
-│ └── start-test.bash
-├── forwarder
-│ ├── cargo.toml
-│ ├── main.rs
-│ ├── messages.rs
-│ └── server.rs
-├── main.py
-├── presets
-│ └── markets.yml
-└── tests
-  ├── fowarder.rs
-  └── server.rs
-```
-
-
-## Disclaimers ⚠️
-
-* **Binary Data:** Including binary files (images, videos, executables) can significantly increase the output file size and introduce noise. Use the `-b` option with caution.
-* **Ignore Patterns:** Utilize `.gitignore` and the `-i` option to exclude unnecessary files like logs, caches, and artifacts, which can make the output more manageable and relevant.
-* **Output Size:** Be mindful of the potential size of the output file, especially when including binary data or large repositories.
+* **Binary Data:** Including binary files can significantly increase output size. Use `-b` with caution.
+* **Ignore Patterns:** The `.gitignore` parser is simplified — negation patterns, `**` globs, and nested `.gitignore` files are not supported.
+* **Output Size:** Be mindful of output size with large repositories.
 
 ## Contributing
 
-We welcome contributions! This can be enhanced in many ways:
-- add support for fetching remote repositories (or even ftp) to fetch and dump in seconds
-- performance increase by working on better IO and threading
-- add complex pattern support for fine grained file ignoring
-- add ignore preset files for language specific use cases (this was mostly used with Python repositories)
-- and more...
-
-Feel free to fork the repository, make your changes, and submit a pull request ❤️
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License — see [LICENCE](LICENCE).
